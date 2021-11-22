@@ -24,10 +24,15 @@ app.use(function (req, res, next) {
 app.get("/API/v1/stats/", (req, res) => {
   console.log("GET received.");
   console.log(req.query);
-  connection.query("SELECT * FROM stats", (err, result) => {
-    if (err) throw err;
-    res.send(JSON.stringify(result, null, "\t"));
-  });
+  if (req.query.username == "root" && req.query.pass == "root") {
+    connection.query("SELECT * FROM stats", (err, result) => {
+      if (err) throw err;
+      res.send(JSON.stringify(result, null, "\t"));
+    });
+  } else {
+    res.send("Incorrect Info");
+  }
+  //res.send("Incorrect login info", null, "\t");
 });
 
 console.log("STARTING PROJ SERVER");
