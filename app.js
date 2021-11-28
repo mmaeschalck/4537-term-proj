@@ -1,8 +1,10 @@
+var utils = require("./utils/utils");
+
 const express = require("express");
 const mysql = require("mysql");
 const app = express();
 const endPointRoot = "/API/v1/";
-const PORT = 80;
+const PORT = 8000;
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
@@ -10,6 +12,10 @@ const connection = mysql.createConnection({
   database: "termproj",
   port: "3306",
 });
+
+// TODO's
+// * Use utils.increment_call_count in every request block to update stats
+// * Add a PUT request.
 
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -21,6 +27,7 @@ app.use(function (req, res, next) {
   next();
 });
 
+// get JSON array of API call stats from stats table. ## VERIFIED WORKING
 app.get("/API/v1/stats/", (req, res) => {
   console.log("GET received.");
   console.log(req.query);
@@ -32,7 +39,123 @@ app.get("/API/v1/stats/", (req, res) => {
   } else {
     res.send("Incorrect Info");
   }
-  //res.send("Incorrect login info", null, "\t");
+});
+
+// Get a random question from the database, scramble answers. ## VERIFIED WORKING
+app.get("/API/v1/question/", (req, res) => {
+  let amount = 1;
+  if (req.query.amount > 1) {
+    amount = req.query.amount;
+  }
+  connection.query(
+    `SELECT * FROM questions ORDER BY RAND() LIMIT ${amount};`,
+    (err, result) => {
+      if (err) throw err;
+      console.log(result);
+      let answers_list = JSON.parse(result[0].incorrect_answer);
+      answers_list.push(result[0].correct_answer);
+      utils.shuffleArray(answers_list);
+      let info_to_send = {
+        questionid: result[0].questionid,
+        category: result[0].category,
+        type: result[0].type,
+        question: result[0].question,
+        answers_list: answers_list,
+      };
+      res.send(info_to_send);
+    }
+  );
+});
+
+// Get all top number of user scores ## VERIFIED WORKING
+app.get("/API/v1/score/", (req, res) => {
+  let count = 1;
+  if (req.query.count > 1) {
+    count = req.query.count;
+  }
+  let query_string = `SELECT * FROM scores ORDER BY score DESC LIMIT ${count}`;
+  connection.query(query_string, (err, result) => {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
+// post a user response to question ## VERIFIED WORKING
+app.post("/API/v1/answer", (req, res) => {
+  let answer_data = req.query;
+  /* ans = {
+    questionid: ,
+    answer: ,
+    userid: ,
+  }
+  */
+  connection.query(
+    `SELECT * FROM questions WHERE questionid = '${answer_data.questionid}'`,
+    (err, result) => {
+      if (err) throw err;
+      let is_correct = result[0].correct_answer == answer_data.answer;
+      console.log(result[0].correct_answer);
+      console.log(answer_data.answer);
+      let to_send = {
+        questionid: answer_data.questionid,
+        is_correct: is_correct,
+      };
+      res.send(to_send);
+    }
+  );
+});
+
+// post a question to the database. ## VERIFIED WORKING
+app.post("/API/v1/question/", (req, res) => {
+  let question = req.query;
+  let insert_query =
+    `INSERT INTO questions (category, type, difficulty, question, correct_answer, incorrect_answer) VALUES (` +
+    `'${question.category}', ` +
+    `'${question.type}', ` +
+    `'${question.difficulty}', ` +
+    `'${question.question}', ` +
+    `'${question.correct_answer}', ` +
+    `'${question.incorrect_answer}' )`;
+  insert_query.replace('"', '""');
+  connection.query(insert_query, (err, result) => {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
+// Add a new user to the database ## VERIFIED WORKING
+app.post("/API/v1/user/", (req, res) => {
+  let name = req.query.username;
+  let add_query = `INSERT INTO users (username) VALUES ('${name}')`;
+  connection.query(add_query, (err, result) => {
+    if (err) throw err;
+    let to_send = {
+      userid: result.insertId,
+      username: name,
+    };
+    res.send(to_send);
+  });
+});
+
+// post a new score to the database # VERIFIED WORKING
+app.post("/API/v1/score/", (req, res) => {
+  let username = req.query.username;
+  let score = req.query.score;
+  let add_query = `INSERT INTO scores (username, score) VALUES ('${username}', ${score})`;
+  connection.query(add_query, (err, result) => {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
+// delete question from DB ## VERIFIED WORKING
+app.delete("/API/v1/question/", (req, res) => {
+  let questionid = req.query.questionid;
+  let del_query = `DELETE FROM questions WHERE questionid=${questionid}`;
+  connection.query(del_query, (err, result) => {
+    if (err) throw err;
+    res.send(result);
+  });
 });
 
 console.log("STARTING PROJ SERVER");
