@@ -34,10 +34,10 @@ app.get("/API/v1/stats/", (req, res) => {
   if (req.query.username == "root" && req.query.pass == "root") {
     connection.query("SELECT * FROM stats", (err, result) => {
       if (err) throw err;
-      res.send(JSON.stringify(result, null, "\t"));
+      res.send(result);
     });
   } else {
-    res.send("Incorrect Info");
+    res.send({ result: "Incorrect Info" });
   }
 });
 
@@ -47,24 +47,34 @@ app.get("/API/v1/question/", (req, res) => {
   if (req.query.amount > 1) {
     amount = req.query.amount;
   }
-  connection.query(
-    `SELECT * FROM questions ORDER BY RAND() LIMIT ${amount};`,
-    (err, result) => {
-      if (err) throw err;
-      console.log(result);
-      let answers_list = JSON.parse(result[0].incorrect_answer);
-      answers_list.push(result[0].correct_answer);
-      utils.shuffleArray(answers_list);
-      let info_to_send = {
-        questionid: result[0].questionid,
-        category: result[0].category,
-        type: result[0].type,
-        question: result[0].question,
-        answers_list: answers_list,
-      };
-      res.send(info_to_send);
-    }
-  );
+  if (req.query.questionid) {
+    connection.query(
+      `SELECT * FROM questions WHERE questionid = ${req.query.questionid}`,
+      (err, result) => {
+        if (err) throw err;
+        res.send(result);
+      }
+    );
+  } else {
+    connection.query(
+      `SELECT * FROM questions ORDER BY RAND() LIMIT ${amount};`,
+      (err, result) => {
+        if (err) throw err;
+        console.log(result);
+        let answers_list = JSON.parse(result[0].incorrect_answer);
+        answers_list.push(result[0].correct_answer);
+        utils.shuffleArray(answers_list);
+        let info_to_send = {
+          questionid: result[0].questionid,
+          category: result[0].category,
+          type: result[0].type,
+          question: result[0].question,
+          answers_list: answers_list,
+        };
+        res.send(info_to_send);
+      }
+    );
+  }
 });
 
 // Get all top number of user scores ## VERIFIED WORKING
@@ -137,7 +147,7 @@ app.post("/API/v1/user/", (req, res) => {
   });
 });
 
-// post a new score to the database # VERIFIED WORKING
+// post a new score to the database ## VERIFIED WORKING
 app.post("/API/v1/score/", (req, res) => {
   let username = req.query.username;
   let score = req.query.score;
@@ -148,7 +158,26 @@ app.post("/API/v1/score/", (req, res) => {
   });
 });
 
-// delete question from DB ## VERIFIED WORKING
+// PUT new information in place of an existing question. ## VERIFIED WORKING
+app.put("/API/v1/question/", (req, res) => {
+  let questionid = req.query.questionid;
+  let question = req.query;
+  let update_query =
+    `UPDATE questions SET ` +
+    `category = '${question.category}', ` +
+    `type = '${question.type}', ` +
+    `difficulty = '${question.difficulty}', ` +
+    `question = '${question.question}', ` +
+    `correct_answer = '${question.correct_answer}', ` +
+    `incorrect_answer = '${question.incorrect_answer}' ` +
+    `WHERE questionid = ${questionid}`;
+  connection.query(update_query, (err, result) => {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
+// delete question from DB given its question id ## VERIFIED WORKING
 app.delete("/API/v1/question/", (req, res) => {
   let questionid = req.query.questionid;
   let del_query = `DELETE FROM questions WHERE questionid=${questionid}`;
