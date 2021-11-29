@@ -1,15 +1,7 @@
 // take a db connection and a call type and increment
 module.exports = {
   increment_call_count: function (connection, call_type) {
-    let query_string = `SELECT * FROM stats WHERE method = '${call_type}'`;
-    let update_query = "";
-    connection.query(query_string, (err, result) => {
-      if (err) throw err;
-      let old_score = result.uses;
-      update_query = `UPDATE stats SET uses= '${
-        old_score + 1
-      }' WHERE method='${call_type}'`;
-    });
+    let update_query = `UPDATE stats SET uses= uses + 1 WHERE method='${call_type}'`;
     connection.query(update_query, (err, result) => {
       if (err) throw err;
     });
@@ -28,12 +20,12 @@ module.exports = {
   // take a DB connection and a userid, increment the user's score.
   increment_score: function (connection, userid) {
     let score = 0;
-    let query_string = `SELECT * FROM score WHERE userid = '${userid}'`;
+    let query_string = `SELECT * FROM scores WHERE userid = '${userid}'`;
     let update_query = "";
     connection.query(query_string, (err, result) => {
       if (err) throw err;
       let score = result.score + 1;
-      update_query = `UPDATE score SET score= '${score}' WHERE userid='${userid}'`;
+      update_query = `UPDATE scores SET score= '${score}' WHERE userid='${userid}'`;
     });
     connection.query(update_query, (err, result) => {
       if (err) throw err;

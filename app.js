@@ -29,6 +29,7 @@ app.use(function (req, res, next) {
 
 // get JSON array of API call stats from stats table. ## VERIFIED WORKING
 app.get("/API/v1/stats/", (req, res) => {
+  utils.increment_call_count(connection, "GET stats");
   console.log("GET received.");
   console.log(req.query);
   if (req.query.username == "root" && req.query.pass == "root") {
@@ -43,6 +44,7 @@ app.get("/API/v1/stats/", (req, res) => {
 
 // Get a random question from the database, scramble answers. ## VERIFIED WORKING
 app.get("/API/v1/question/", (req, res) => {
+  utils.increment_call_count(connection, "GET question");
   let amount = 1;
   if (req.query.amount > 1) {
     amount = req.query.amount;
@@ -79,6 +81,7 @@ app.get("/API/v1/question/", (req, res) => {
 
 // Get all top number of user scores ## VERIFIED WORKING
 app.get("/API/v1/score/", (req, res) => {
+  utils.increment_call_count(connection, "GET score");
   let count = 1;
   if (req.query.count > 1) {
     count = req.query.count;
@@ -92,6 +95,7 @@ app.get("/API/v1/score/", (req, res) => {
 
 // post a user response to question ## VERIFIED WORKING
 app.post("/API/v1/answer", (req, res) => {
+  utils.increment_call_count(connection, "POST answer");
   let answer_data = req.query;
   /* ans = {
     questionid: ,
@@ -117,6 +121,7 @@ app.post("/API/v1/answer", (req, res) => {
 
 // post a question to the database. ## VERIFIED WORKING
 app.post("/API/v1/question/", (req, res) => {
+  utils.increment_call_count(connection, "POST question");
   let question = req.query;
   let insert_query =
     `INSERT INTO questions (category, type, difficulty, question, correct_answer, incorrect_answer) VALUES (` +
@@ -133,8 +138,9 @@ app.post("/API/v1/question/", (req, res) => {
   });
 });
 
-// Add a new user to the database ## VERIFIED WORKING
+// Add a new user to the database ## NOT USED
 app.post("/API/v1/user/", (req, res) => {
+  utils.increment_call_count(connection, "POST user");
   let name = req.query.username;
   let add_query = `INSERT INTO users (username) VALUES ('${name}')`;
   connection.query(add_query, (err, result) => {
@@ -149,6 +155,7 @@ app.post("/API/v1/user/", (req, res) => {
 
 // post a new score to the database ## VERIFIED WORKING
 app.post("/API/v1/score/", (req, res) => {
+  utils.increment_call_count(connection, "POST score");
   let username = req.query.username;
   let score = req.query.score;
   let add_query = `INSERT INTO scores (username, score) VALUES ('${username}', ${score})`;
@@ -160,6 +167,7 @@ app.post("/API/v1/score/", (req, res) => {
 
 // PUT new information in place of an existing question. ## VERIFIED WORKING
 app.put("/API/v1/question/", (req, res) => {
+  utils.increment_call_count(connection, "PUT question");
   let questionid = req.query.questionid;
   let question = req.query;
   let update_query =
@@ -179,6 +187,7 @@ app.put("/API/v1/question/", (req, res) => {
 
 // delete question from DB given its question id ## VERIFIED WORKING
 app.delete("/API/v1/question/", (req, res) => {
+  utils.increment_call_count(connection, "DELETE question");
   let questionid = req.query.questionid;
   let del_query = `DELETE FROM questions WHERE questionid=${questionid}`;
   connection.query(del_query, (err, result) => {
