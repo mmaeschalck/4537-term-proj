@@ -94,13 +94,13 @@ app.get("/API/v1/score/", (req, res) => {
 });
 
 // post a user response to question ## VERIFIED WORKING
-app.post("/API/v1/answer", (req, res) => {
+app.post("/API/v1/answer/", (req, res) => {
   utils.increment_call_count(connection, "POST answer");
   let answer_data = req.query;
   /* ans = {
     questionid: ,
     answer: ,
-    userid: ,
+    userid: , ## NOT NECESSARY
   }
   */
   connection.query(
