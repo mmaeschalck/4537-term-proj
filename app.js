@@ -1,15 +1,17 @@
 var utils = require("./utils/utils");
 
 const express = require("express");
+const bodyParser = require("body-parser");
 const mysql = require("mysql");
 const app = express();
 const endPointRoot = "/API/v1/";
 const PORT = 8000;
+const urlencodedParser = bodyParser.urlencoded({extended: false});
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "root",
-  database: "termproj",
+  password: "",
+  database: "mydb",
   port: "3306",
 });
 
@@ -80,11 +82,12 @@ app.get("/API/v1/question/", (req, res) => {
 });
 
 // Get all top number of user scores ## VERIFIED WORKING
-app.get("/API/v1/score/", (req, res) => {
+app.get("/API/v1/score/", urlencodedParser,(req, res) => {
   utils.increment_call_count(connection, "GET score");
   let count = 1;
-  if (req.query.count > 1) {
-    count = req.query.count;
+  let data = JSON.parse(JSON.stringify(req.body));
+  if (data.count > 1) {
+    count = data.count;
   }
   let query_string = `SELECT * FROM scores ORDER BY score DESC LIMIT ${count}`;
   connection.query(query_string, (err, result) => {
@@ -120,9 +123,9 @@ app.post("/API/v1/answer/", (req, res) => {
 });
 
 // post a question to the database. ## VERIFIED WORKING
-app.post("/API/v1/question/", (req, res) => {
+app.post("/API/v1/question/", urlencodedParser, (req, res) => {
   utils.increment_call_count(connection, "POST question");
-  let question = req.query;
+  let question = JSON.parse(JSON.stringify(req.body));
   let insert_query =
     `INSERT INTO questions (category, type, difficulty, question, correct_answer, incorrect_answer) VALUES (` +
     `'${question.category}', ` +
@@ -166,10 +169,11 @@ app.post("/API/v1/score/", (req, res) => {
 });
 
 // PUT new information in place of an existing question. ## VERIFIED WORKING
-app.put("/API/v1/question/", (req, res) => {
+app.put("/API/v1/question/", urlencodedParser, (req, res) => {
   utils.increment_call_count(connection, "PUT question");
-  let questionid = req.query.questionid;
-  let question = req.query;
+  let data = JSON.parse(JSON.stringify(req.body));
+  let questionid = data.questionid;
+  let question = data;
   let update_query =
     `UPDATE questions SET ` +
     `category = '${question.category}', ` +
