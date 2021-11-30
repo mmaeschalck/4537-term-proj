@@ -11,8 +11,8 @@ const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "",
-  database: "mydb",
-  port: "3306",
+  database: "termproj",
+  // port: "3306",
 });
 
 // TODO's
@@ -97,19 +97,22 @@ app.get("/API/v1/score/", urlencodedParser,(req, res) => {
 });
 
 // post a user response to question ## VERIFIED WORKING
-app.post("/API/v1/answer/", (req, res) => {
+app.post("/API/v1/answer/", urlencodedParser, (req, res) => {
   utils.increment_call_count(connection, "POST answer");
-  let answer_data = req.query;
+  let answer_data = JSON.parse(JSON.stringify(req.body));
   /* ans = {
     questionid: ,
     answer: ,
     userid: , ## NOT NECESSARY
   }
   */
+  console.log(answer_data);
   connection.query(
-    `SELECT * FROM questions WHERE questionid = '${answer_data.questionid}'`,
+    `SELECT * FROM questions WHERE questionid = '${parseInt(answer_data.questionid)}'`,
     (err, result) => {
       if (err) throw err;
+      console.log("skdjfl")
+      console.log(result[0]);
       let is_correct = result[0].correct_answer == answer_data.answer;
       console.log(result[0].correct_answer);
       console.log(answer_data.answer);
@@ -117,6 +120,7 @@ app.post("/API/v1/answer/", (req, res) => {
         questionid: answer_data.questionid,
         is_correct: is_correct,
       };
+      console.log(to_send);
       res.send(to_send);
     }
   );
@@ -157,11 +161,13 @@ app.post("/API/v1/user/", (req, res) => {
 });
 
 // post a new score to the database ## VERIFIED WORKING
-app.post("/API/v1/score/", (req, res) => {
+app.post("/API/v1/score/", urlencodedParser, (req, res) => {
   utils.increment_call_count(connection, "POST score");
-  let username = req.query.username;
-  let score = req.query.score;
-  let add_query = `INSERT INTO scores (username, score) VALUES ('${username}', ${score})`;
+  let scoreJ = JSON.parse(JSON.stringify(req.body));
+  console.log(scoreJ);
+  let username = scoreJ.username;
+  let score = scoreJ.score;
+  let add_query = `INSERT INTO scores (username, score) VALUES ('${username}', ${parseInt(score)})`;
   connection.query(add_query, (err, result) => {
     if (err) throw err;
     res.send(result);
