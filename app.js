@@ -5,12 +5,12 @@ const bodyParser = require("body-parser");
 const mysql = require("mysql");
 const app = express();
 const endPointRoot = "/API/v1/";
-const PORT = 8000;
-const urlencodedParser = bodyParser.urlencoded({extended: false});
+const PORT = 80;
+const urlencodedParser = bodyParser.urlencoded({ extended: false });
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "root",
   database: "termproj",
   // port: "3306",
 });
@@ -82,7 +82,7 @@ app.get("/API/v1/question/", (req, res) => {
 });
 
 // Get all top number of user scores ## VERIFIED WORKING
-app.get("/API/v1/score/", urlencodedParser,(req, res) => {
+app.get("/API/v1/score/", urlencodedParser, (req, res) => {
   utils.increment_call_count(connection, "GET score");
   let count = 1;
   let data = JSON.parse(JSON.stringify(req.body));
@@ -108,10 +108,12 @@ app.post("/API/v1/answer/", urlencodedParser, (req, res) => {
   */
   console.log(answer_data);
   connection.query(
-    `SELECT * FROM questions WHERE questionid = '${parseInt(answer_data.questionid)}'`,
+    `SELECT * FROM questions WHERE questionid = '${parseInt(
+      answer_data.questionid
+    )}'`,
     (err, result) => {
       if (err) throw err;
-      console.log("skdjfl")
+      console.log("skdjfl");
       console.log(result[0]);
       let is_correct = result[0].correct_answer == answer_data.answer;
       console.log(result[0].correct_answer);
@@ -167,7 +169,9 @@ app.post("/API/v1/score/", urlencodedParser, (req, res) => {
   console.log(scoreJ);
   let username = scoreJ.username;
   let score = scoreJ.score;
-  let add_query = `INSERT INTO scores (username, score) VALUES ('${username}', ${parseInt(score)})`;
+  let add_query = `INSERT INTO scores (username, score) VALUES ('${username}', ${parseInt(
+    score
+  )})`;
   connection.query(add_query, (err, result) => {
     if (err) throw err;
     res.send(result);
