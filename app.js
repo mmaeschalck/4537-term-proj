@@ -89,7 +89,7 @@ app.get("/API/v1/score/", urlencodedParser, (req, res) => {
   if (data.count > 1) {
     count = data.count;
   }
-  let query_string = `SELECT * FROM scores ORDER BY score DESC LIMIT ${count}`;
+  let query_string = `SELECT * FROM scores ORDER BY score DESC`;
   connection.query(query_string, (err, result) => {
     if (err) throw err;
     res.send(result);
