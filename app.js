@@ -37,7 +37,7 @@ app.get("/API/v1/stats/", (req, res) => {
   if (req.query.username == "root" && req.query.pass == "root") {
     connection.query("SELECT * FROM stats", (err, result) => {
       if (err) throw err;
-      res.send(JSON.stringify(result));
+      res.send(JSON.stringify(result, null, "\t"));
     });
   } else {
     res.send("Incorrect Info");
